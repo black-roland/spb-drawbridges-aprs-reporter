@@ -1,0 +1,8 @@
+[Unit]
+Description=Run Spb Drawbridges APRS Reporter at night
+
+[Timer]
+OnCalendar=*-4..11-* 00..05:00,30:00
+
+[Install]
+WantedBy=timers.target

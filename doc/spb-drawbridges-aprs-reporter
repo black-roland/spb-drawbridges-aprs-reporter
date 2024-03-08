@@ -1,0 +1,2 @@
+DRAWBRIDGES_ARGS=--schedule-csv /opt/spb-drawbridges-aprs-reporter/doc/grafik-razvodki-mostov.csv --callsign N0CALL --aprsis-server rotate.aprs2.ru
+APRSIS_PASSWORD=0
