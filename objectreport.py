@@ -10,8 +10,8 @@ class ObjectReport(PositionReport):
     object_name = 'Bridge'
 
     def _serialize_body(self):
-        object_name = self.object_name[:9].rjust(9)
-        timestamp = '111111z'  # http://wa8lmf.net/bruninga/aprs/object-perm.txt
+        object_name = self.object_name[:9].ljust(9)
+        timestamp = '*111111z'  # http://wa8lmf.net/bruninga/aprs/object-perm.txt
 
         body = [
             ';',  # packet type
