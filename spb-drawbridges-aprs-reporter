@@ -52,7 +52,7 @@ def create_bridge_beacons(bridges, callsign):
     beacons = []
     for bridge in bridges:
         object_name = slugify(re.sub('мост', '', bridge['bridge_name'], flags=re.I), 'ru').title()
-        comment = 'Open ' + ' and '.join([f'from {frm} to {to}' for (frm, to) in bridge['intervals']])
+        comment = 'Lifted ' + ' and '.join([f'from {frm} till {to}' for (frm, to) in bridge['intervals']])
 
         beacon = ObjectReport({
             'fromcall': callsign,
