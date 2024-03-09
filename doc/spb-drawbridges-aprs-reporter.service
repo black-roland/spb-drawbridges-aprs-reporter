@@ -3,13 +3,14 @@ Description=Spb Drawbridges APRS Reporter
 After=network-online.target
 
 [Service]
-Type=simple
+Type=oneshot
 DynamicUser=yes
 EnvironmentFile=/etc/sysconfig/spb-drawbridges-aprs-reporter
 ExecStart=/opt/spb-drawbridges-aprs-reporter/spb-drawbridges-aprs-reporter $DRAWBRIDGES_ARGS
 ProtectSystem=full
 ProtectHome=true
 NoNewPrivileges=yes
+TimeoutStartSec=1min
 
 [Install]
 WantedBy=multi-user.target
