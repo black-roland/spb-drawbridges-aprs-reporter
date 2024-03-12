@@ -1,12 +1,12 @@
 [Unit]
-Description=Spb Drawbridges APRS Reporter
+Description=SPb Drawbridges APRS Reporter
 After=network-online.target
 
 [Service]
 Type=oneshot
 DynamicUser=yes
 EnvironmentFile=/etc/sysconfig/spb-drawbridges-aprs-reporter
-ExecStart=/opt/spb-drawbridges-aprs-reporter/spb-drawbridges-aprs-reporter $DRAWBRIDGES_ARGS
+ExecStart=/opt/spb-drawbridges-aprs-reporter/spb-drawbridges-aprs-reporter --callsign $CALLSIGN --aprsis-server $APRSIS_SERVER --aprsis-port $APRSIS_PORT
 ProtectSystem=full
 ProtectHome=true
 NoNewPrivileges=yes
