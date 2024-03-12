@@ -108,6 +108,7 @@ if __name__ == '__main__':
     aprsis.add_argument('--aprsis-password', default=os.environ.get('APRSIS_PASSWORD'))
     args = args_parser.parse_args()
 
+    callsign = args.callsign.upper()
     schedule = fetch_schedule()
-    bridge_beacons = create_bridge_beacons(schedule, args.callsign)
-    report_beacons_to_aprs(bridge_beacons, args.callsign, args.aprsis_server, args.aprsis_port, args.aprsis_password)
+    bridge_beacons = create_bridge_beacons(schedule, callsign)
+    report_beacons_to_aprs(bridge_beacons, callsign, args.aprsis_server, args.aprsis_port, args.aprsis_password)
