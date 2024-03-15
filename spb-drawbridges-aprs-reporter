@@ -41,6 +41,7 @@ def fetch_schedule():
             'bridge_name': bridge['caption'],
             'intervals': intervals,
             'open': bridge['open'],
+            # FIXME: Combine "tomorrow" with "open" in some kind of enum. For now I'm not sure what possible states are
             'tomorrow': not schedule.get('not_open', True),
             'coordinates': {
                 'latitude': float(bridge['latitude']),
@@ -60,22 +61,15 @@ def create_bridge_beacons(bridges, callsign):
     beacons = []
     for bridge in bridges:
         object_name = re.sub(r'\s?Bridge\s?', '', bridge['bridge_name'], flags=re.I)
-        if bridge['open']:
-            comment = 'Raised '
-        elif bridge['tomorrow']:
-            comment = 'Scheduled tomorrow '
-        else:
-            comment = 'Scheduled '
-        comment += ' and '.join([f'from {frm} till {to}' for (frm, to) in bridge['intervals']])
-        if len(comment) <= 33:
-            comment += ' https://mostotrest-spb.ru/'
+        comment = format_comment(bridge)
+        symbol_table, symbol = get_symbol(bridge)
 
         beacon = ObjectReport({
             'fromcall': callsign,
             'tocall': 'APRS',
             'path': ['TCPIP*'],
-            'symbol_table': '/',
-            'symbol': 'Y',
+            'symbol_table': symbol_table,
+            'symbol': symbol,
             'object_name': object_name,
             'latitude': bridge['coordinates']['latitude'],
             'longitude': bridge['coordinates']['longitude'],
@@ -84,6 +78,23 @@ def create_bridge_beacons(bridges, callsign):
         beacons.append(beacon)
 
     return beacons
+
+
+def format_comment(bridge):
+    if bridge['tomorrow']:
+        comment = 'Lowered'
+    else:
+        comment = 'Raised ' if bridge['open'] else 'Scheduled '
+        comment += ' and '.join([f'from {frm} till {tll}' for (frm, tll) in bridge['intervals']])
+
+    if len(comment) <= 33:
+        comment += ' https://mostotrest-spb.ru/'
+
+    return comment
+
+
+def get_symbol(bridge):
+    return ('/', 'Y') if bridge['open'] else ('\\', 'N')
 
 
 def report_beacons_to_aprs(beacons, callsign, server, port, password):
@@ -114,6 +125,7 @@ if __name__ == '__main__':
     aprsis.add_argument('--aprsis-password', default=os.environ.get('APRSIS_PASSWORD'))
     args = args_parser.parse_args()
 
+    # FIXME: OOP?
     callsign = args.callsign.upper()
     schedule = fetch_schedule()
     bridge_beacons = create_bridge_beacons(schedule, callsign)
