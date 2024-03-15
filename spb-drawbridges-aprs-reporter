@@ -41,6 +41,7 @@ def fetch_schedule():
             'bridge_name': bridge['caption'],
             'intervals': intervals,
             'open': bridge['open'],
+            'tomorrow': not schedule.get('not_open', True),
             'coordinates': {
                 'latitude': float(bridge['latitude']),
                 'longitude': float(bridge['longitude']),
@@ -59,9 +60,15 @@ def create_bridge_beacons(bridges, callsign):
     beacons = []
     for bridge in bridges:
         object_name = re.sub(r'\s?Bridge\s?', '', bridge['bridge_name'], flags=re.I)
-        comment = 'Open ' if bridge['open'] else 'Scheduled '
+        if bridge['open']:
+            comment = 'Raised '
+        elif bridge['tomorrow']:
+            comment = 'Scheduled tomorrow '
+        else:
+            comment = 'Scheduled '
         comment += ' and '.join([f'from {frm} till {to}' for (frm, to) in bridge['intervals']])
-        comment += ' mostotrest-spb.ru'
+        if len(comment) <= 33:
+            comment += ' https://mostotrest-spb.ru/'
 
         beacon = ObjectReport({
             'fromcall': callsign,
