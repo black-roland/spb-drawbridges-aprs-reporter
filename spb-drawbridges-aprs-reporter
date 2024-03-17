@@ -41,8 +41,6 @@ def fetch_schedule():
             'bridge_name': bridge['caption'],
             'intervals': intervals,
             'open': bridge['open'],
-            # FIXME: Combine "tomorrow" with "open" in some kind of enum. For now I'm not sure what possible states are
-            'tomorrow': not schedule.get('not_open', True),
             'coordinates': {
                 'latitude': float(bridge['latitude']),
                 'longitude': float(bridge['longitude']),
@@ -81,11 +79,8 @@ def create_bridge_beacons(bridges, callsign):
 
 
 def format_comment(bridge):
-    if bridge['tomorrow']:
-        comment = 'Lowered'
-    else:
-        comment = 'Raised ' if bridge['open'] else 'Scheduled '
-        comment += ' and '.join([f'from {frm} till {tll}' for (frm, tll) in bridge['intervals']])
+    comment = 'Raised. ' if bridge['open'] else 'Lowered. '
+    comment += 'Schedule: ' + ' and '.join([f'{start} - {end}' for (start, end) in bridge['intervals']])
 
     if len(comment) <= 33:
         comment += ' https://mostotrest-spb.ru/'
