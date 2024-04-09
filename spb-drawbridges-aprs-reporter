@@ -31,7 +31,7 @@ def fetch_schedule(mostotrest_api_s):
         bridge = row['bridge']
         schedule = row['schedule']
 
-        if schedule['completion']:
+        if schedule['completion'] or ('not_open' in schedule and schedule['not_open']):
             continue
 
         intervals = [(ts_to_time(schedule['time_from']), ts_to_time(schedule['time_to']))]
