@@ -17,10 +17,10 @@ import requests
 from objectreport import ObjectReport
 
 
-def fetch_schedule():
+def fetch_schedule(mostotrest_api_s):
     response = requests.get(
         'https://en.mostotrest-spb.ru/rest-api/v1.1/schedule.json',
-        params={'s': ''},
+        params={'s': mostotrest_api_s},
         headers={'user-agent': 'Mozilla/5.0 (compatible; SPbDrawbridgesAPRSReporter/1.0)'},
     )
     response.raise_for_status()
@@ -113,6 +113,7 @@ def report_beacons_to_aprs(beacons, callsign, server, port, password):
 
 if __name__ == '__main__':
     args_parser = argparse.ArgumentParser(description='SPb Drawbridges APRS Reporter')
+    args_parser.add_argument('--mostotrest-api-s', required=True)
     args_parser.add_argument('--callsign', help='callsign', required=True)
     aprsis = args_parser.add_argument_group('aprsis', 'APRS-IS settings')
     aprsis.add_argument('--aprsis-server', required=True)
@@ -122,6 +123,6 @@ if __name__ == '__main__':
 
     # FIXME: OOP?
     callsign = args.callsign.upper()
-    schedule = fetch_schedule()
+    schedule = fetch_schedule(args.mostotrest_api_s)
     bridge_beacons = create_bridge_beacons(schedule, callsign)
     report_beacons_to_aprs(bridge_beacons, callsign, args.aprsis_server, args.aprsis_port, args.aprsis_password)
