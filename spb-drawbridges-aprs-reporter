@@ -5,10 +5,10 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import argparse
-import csv
 import os
 import re
 from datetime import datetime
+from time import sleep
 
 import aprslib
 import pytz
@@ -108,6 +108,7 @@ def report_beacons_to_aprs(beacons, callsign, server, port, password):
 
     for beacon in beacons:
         aprs.sendall(beacon)
+        sleep(1)
 
     aprs.close()
 
