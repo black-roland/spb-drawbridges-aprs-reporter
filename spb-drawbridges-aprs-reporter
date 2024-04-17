@@ -124,7 +124,7 @@ if __name__ == '__main__':
     args = args_parser.parse_args()
 
     # FIXME: OOP?
-    callsign = args.callsign.upper()
     schedule = fetch_schedule(args.mostotrest_api_s)
+    callsign = args.callsign.upper()
     bridge_beacons = create_bridge_beacons(schedule, callsign)
     report_beacons_to_aprs(bridge_beacons, callsign, args.aprsis_server, args.aprsis_port, args.aprsis_password)
