@@ -19,83 +19,103 @@ from objectreport import ObjectReport
 
 def fetch_schedule(mostotrest_api_s):
     response = requests.get(
-        'https://en.mostotrest-spb.ru/rest-api/v1.1/schedule.json',
-        params={'s': mostotrest_api_s},
-        headers={'user-agent': 'Mozilla/5.0 (Linux; Android 10; Build/RPP4.200409.015; wv) AppleWebKit/537.36 (KHTML, '
-                               'like Gecko) Version/4.0 Chrome/83.0.4099.5 Mobile Safari/537.36'},
+        "https://en.mostotrest-spb.ru/rest-api/v1.1/schedule.json",
+        params={"s": mostotrest_api_s},
+        headers={
+            "user-agent": "Mozilla/5.0 (Linux; Android 10; Build/RPP4.200409.015; wv) AppleWebKit/537.36 (KHTML, "
+            "like Gecko) Version/4.0 Chrome/83.0.4099.5 Mobile Safari/537.36"
+        },
     )
     response.raise_for_status()
 
     bridges_schedule = []
-    for row in response.json()['result']['rows']:
-        bridge = row['bridge']
-        schedule = row['schedule']
+    for row in response.json()["result"]["rows"]:
+        bridge = row["bridge"]
+        schedule = row["schedule"]
 
-        if schedule['completion'] or ('not_open' in schedule and schedule['not_open']):
+        if schedule["completion"] or ("not_open" in schedule and schedule["not_open"]):
             continue
 
-        intervals = [(ts_to_time(schedule['time_from']), ts_to_time(schedule['time_to']))]
-        if schedule['second_time']:
-            intervals.append((ts_to_time(schedule['second_time_from']), ts_to_time(schedule['second_time_to'])))
+        intervals = [
+            (ts_to_time(schedule["time_from"]), ts_to_time(schedule["time_to"]))
+        ]
+        if schedule["second_time"]:
+            intervals.append(
+                (
+                    ts_to_time(schedule["second_time_from"]),
+                    ts_to_time(schedule["second_time_to"]),
+                )
+            )
 
-        bridges_schedule.append({
-            'bridge_name': bridge['caption'],
-            'intervals': intervals,
-            'open': bridge['open'],
-            'coordinates': {
-                'latitude': float(bridge['latitude']),
-                'longitude': float(bridge['longitude']),
+        bridges_schedule.append(
+            {
+                "bridge_name": bridge["caption"],
+                "intervals": intervals,
+                "open": bridge["open"],
+                "coordinates": {
+                    "latitude": float(bridge["latitude"]),
+                    "longitude": float(bridge["longitude"]),
+                },
             }
-        })
+        )
 
     return bridges_schedule
 
 
 def ts_to_time(timestamp):
-    date = datetime.fromtimestamp(timestamp, tz=pytz.UTC).astimezone(pytz.timezone('Europe/Moscow'))
-    return date.strftime('%H:%M')
+    date = datetime.fromtimestamp(timestamp, tz=pytz.UTC).astimezone(
+        pytz.timezone("Europe/Moscow")
+    )
+    return date.strftime("%H:%M")
 
 
-def create_bridge_beacons(bridges, callsign):
+def create_bridge_beacons(bridges, callsign, only_raised):
     beacons = []
     for bridge in bridges:
-        object_name = re.sub(r'\s?Bridge\s?', '', bridge['bridge_name'], flags=re.I)
+        if only_raised and not bridge["open"]:
+            continue
+
+        object_name = re.sub(r"\s?Bridge\s?", "", bridge["bridge_name"], flags=re.I)
         comment = format_comment(bridge)
         symbol_table, symbol = get_symbol(bridge)
 
-        beacon = ObjectReport({
-            'fromcall': callsign,
-            'tocall': 'APRS',
-            'path': ['TCPIP*'],
-            'symbol_table': symbol_table,
-            'symbol': symbol,
-            'object_name': object_name,
-            'latitude': bridge['coordinates']['latitude'],
-            'longitude': bridge['coordinates']['longitude'],
-            'comment': comment,
-        })
+        beacon = ObjectReport(
+            {
+                "fromcall": callsign,
+                "tocall": "APRS",
+                "path": ["TCPIP*"],
+                "symbol_table": symbol_table,
+                "symbol": symbol,
+                "object_name": object_name,
+                "latitude": bridge["coordinates"]["latitude"],
+                "longitude": bridge["coordinates"]["longitude"],
+                "comment": comment,
+            }
+        )
         beacons.append(beacon)
 
     return beacons
 
 
 def format_comment(bridge):
-    comment = 'Raised. ' if bridge['open'] else 'Lowered. '
-    comment += 'Schedule: ' + ' and '.join([f'{start} - {end}' for (start, end) in bridge['intervals']])
+    comment = "Raised. " if bridge["open"] else "Lowered. "
+    comment += "Schedule: " + " and ".join(
+        [f"{start} - {end}" for (start, end) in bridge["intervals"]]
+    )
 
     if len(comment) <= 33:
-        comment += ' https://mostotrest-spb.ru/'
+        comment += " https://mostotrest-spb.ru/"
 
     return comment
 
 
 def get_symbol(bridge):
-    return ('/', 'Y') if bridge['open'] else ('\\', 'N')
+    return ("/", "Y") if bridge["open"] else ("\\", "N")
 
 
 def report_beacons_to_aprs(beacons, callsign, server, port, password):
     if len(beacons) == 0:
-        print('No APRS beacons to report. Is it drawbridges season?')
+        print("No APRS beacons to report. Is it drawbridges season?")
         return
 
     aprs = aprslib.IS(
@@ -113,18 +133,25 @@ def report_beacons_to_aprs(beacons, callsign, server, port, password):
     aprs.close()
 
 
-if __name__ == '__main__':
-    args_parser = argparse.ArgumentParser(description='SPb Drawbridges APRS Reporter')
-    args_parser.add_argument('--mostotrest-api-s', required=True)
-    args_parser.add_argument('--callsign', help='callsign', required=True)
-    aprsis = args_parser.add_argument_group('aprsis', 'APRS-IS settings')
-    aprsis.add_argument('--aprsis-server', required=True)
-    aprsis.add_argument('--aprsis-port', type=int, default=14580)
-    aprsis.add_argument('--aprsis-password', default=os.environ.get('APRSIS_PASSWORD'))
+if __name__ == "__main__":
+    args_parser = argparse.ArgumentParser(description="SPb Drawbridges APRS Reporter")
+    args_parser.add_argument("--mostotrest-api-s", required=True)
+    args_parser.add_argument("--callsign", help="callsign", required=True)
+    aprsis = args_parser.add_argument_group("aprsis", "APRS-IS settings")
+    aprsis.add_argument("--aprsis-server", required=True)
+    aprsis.add_argument("--aprsis-port", type=int, default=14580)
+    aprsis.add_argument("--aprsis-password", default=os.environ.get("APRSIS_PASSWORD"))
+    args_parser.add_argument("--only-raised", action="store_true", default=False)
     args = args_parser.parse_args()
 
     # FIXME: OOP?
     schedule = fetch_schedule(args.mostotrest_api_s)
     callsign = args.callsign.upper()
-    bridge_beacons = create_bridge_beacons(schedule, callsign)
-    report_beacons_to_aprs(bridge_beacons, callsign, args.aprsis_server, args.aprsis_port, args.aprsis_password)
+    bridge_beacons = create_bridge_beacons(schedule, callsign, args.only_raised)
+    report_beacons_to_aprs(
+        bridge_beacons,
+        callsign,
+        args.aprsis_server,
+        args.aprsis_port,
+        args.aprsis_password,
+    )
