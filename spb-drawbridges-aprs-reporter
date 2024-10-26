@@ -77,7 +77,7 @@ def create_bridge_beacons(bridges, callsign, only_raised):
 
         object_name = re.sub(r"\s?Bridge\s?", "", bridge["bridge_name"], flags=re.I)
         comment = format_comment(bridge)
-        symbol_table, symbol = get_symbol(bridge)
+        symbol_table, symbol = get_symbol(bridge, only_raised)
 
         beacon = ObjectReport(
             {
@@ -109,8 +109,14 @@ def format_comment(bridge):
     return comment
 
 
-def get_symbol(bridge):
-    return ("/", "Y") if bridge["open"] else ("\\", "N")
+def get_symbol(bridge, only_raised):
+    yacht = ("/", "Y")
+    buoy = ("\\", "N")
+
+    if only_raised:
+        return buoy
+
+    return yacht if bridge["open"] else buoy
 
 
 def report_beacons_to_aprs(beacons, callsign, server, port, password):
@@ -141,7 +147,8 @@ if __name__ == "__main__":
     aprsis.add_argument("--aprsis-server", required=True)
     aprsis.add_argument("--aprsis-port", type=int, default=14580)
     aprsis.add_argument("--aprsis-password", default=os.environ.get("APRSIS_PASSWORD"))
-    args_parser.add_argument("--only-raised", action="store_true", default=False)
+    beacons = args_parser.add_argument_group("beacons", "Beacon settings")
+    beacons.add_argument("--only-raised", action="store_true", default=False)
     args = args_parser.parse_args()
 
     # FIXME: OOP?
